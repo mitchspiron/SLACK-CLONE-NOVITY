@@ -12,3 +12,107 @@ datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
 }
+
+model Users {
+  id        String     @id @default(uuid())
+  firstname String
+  lastname  String
+  email     String     @unique
+  password  String
+  status    UserStatus @default(OFFLINE)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  Messages       Messages[]
+  Channels       Channels[]
+  Users_Channels Users_Channels[]
+  Chats          Chats[]
+  Users_Chats    Users_Chats[]
+}
+
+model Messages {
+  id          Int           @id @default(autoincrement())
+  content     String        @db.Text
+  sender      Users         @relation(fields: [senderId], references: [id])
+  senderId    String
+  recipientId String?
+  channels    Channels?     @relation(fields: [channelId], references: [id])
+  channelId   String?
+  status      MessageStatus @default(SENT)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([senderId])
+  @@index([channelId])
+}
+
+model Chats {
+  id     String @id @default(uuid())
+  users  Users  @relation(fields: [userId], references: [id])
+  userId String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  Users_Chats Users_Chats[]
+
+  @@index([userId])
+}
+
+model Users_Chats {
+  id     Int    @id @default(autoincrement())
+  users  Users  @relation(fields: [userId], references: [id])
+  userId String
+  chats  Chats  @relation(fields: [chatId], references: [id])
+  chatId String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([chatId])
+}
+
+model Channels {
+  id        String        @id @default(uuid())
+  name      String
+  users     Users         @relation(fields: [userId], references: [id])
+  userId    String
+  status    ChannelStatus
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  Messages       Messages[]
+  Users_Channels Users_Channels[]
+
+  @@index([userId])
+}
+
+model Users_Channels {
+  id        Int      @id @default(autoincrement())
+  users     Users    @relation(fields: [userId], references: [id])
+  userId    String
+  channels  Channels @relation(fields: [channelId], references: [id])
+  channelId String
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([channelId])
+}
+
+enum UserStatus {
+  ONLINE
+  OFFLINE
+}
+
+enum MessageStatus {
+  SENT
+  SEEN
+}
+
+enum ChannelStatus {
+  PRIVATE
+  PUBLIC
+}
