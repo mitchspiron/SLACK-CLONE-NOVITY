@@ -4,7 +4,6 @@ export interface ResponseGlobalInterface<T> {
 }
 
 export interface JwtPayload {
+  userId: string;
   email: string;
-  userId: number;
-  role: string;
 }
