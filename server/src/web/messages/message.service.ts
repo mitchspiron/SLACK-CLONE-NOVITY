@@ -132,14 +132,14 @@ export class MessageService {
           throw new BadRequestException(`This Channel does not exist!`);
         }
 
-        const userChannelExists = await this.prisma.users_Channels.findMany({
+        const userChannelExists = await this.prisma.users_Channels.findFirst({
           where: {
             userId: user.id,
             channelId: channelExists.id,
           },
         });
 
-        if (userChannelExists.length == 0) {
+        if (!userChannelExists) {
           throw new BadRequestException(
             `You are not a member of this channel!`,
           );
@@ -148,8 +148,8 @@ export class MessageService {
         newMessage = await this.prisma.messages.create({
           data: {
             content: dto.content,
-            senderId: userChannelExists[0].userId,
-            channelId: userChannelExists[0].channelId,
+            senderId: userChannelExists.userId,
+            channelId: userChannelExists.channelId,
           },
         });
 
@@ -246,35 +246,28 @@ export class MessageService {
     dto: GetAllMessageByChatDto,
   ): GlobalResponseType {
     try {
-      const userChat = await this.prisma.users_Chats.findMany({
+      const userChat = await this.prisma.users_Chats.findFirst({
         where: {
           userId: user.id,
           chatId: dto.chatId,
         },
       });
 
-      if (userChat.length == 0) {
+      if (!userChat) {
         throw new UnauthorizedException('User not allowed to access this chat');
       }
 
-      const chatExists = await this.prisma.chats.findMany({
+      const chatExists = await this.prisma.messages.findMany({
         where: {
-          id: userChat[0].chatId,
+          chatId: userChat.chatId
         },
         orderBy: {
           updatedAt: 'asc',
         },
-        include: {
-          Messages: {
-            include: {
-              sender: true,
-            },
-          },
-        },
       });
 
       if (chatExists.length == 0) {
-        throw new BadRequestException('No chat found');
+        throw new BadRequestException('No message found!');
       }
 
       return ResponseMap(
