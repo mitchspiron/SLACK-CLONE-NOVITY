@@ -4,16 +4,13 @@ import {
   Get,
   HttpCode,
   HttpStatus,
-  Param,
   Post,
   Req,
   Res,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import {
-  ForgotPasswordDto,
   LoginDto,
-  ResetPasswordDto,
   SignUpDto,
 } from './dto';
 import { GlobalResponseType } from '../../utils/type';
@@ -25,12 +22,14 @@ export class AuthController {
 
   @Public()
   @Post('signup')
+  @HttpCode(HttpStatus.OK)
   async signUpUser(@Body() dto: SignUpDto): GlobalResponseType {
     return await this.authService.signUpUser(dto);
   }
 
   @Public()
   @Post('login')
+  @HttpCode(HttpStatus.OK)
   login(@Body() dto: LoginDto): GlobalResponseType {
     return this.authService.login(dto);
   }

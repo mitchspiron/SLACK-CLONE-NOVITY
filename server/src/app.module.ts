@@ -6,9 +6,10 @@ import { APP_GUARD, APP_PIPE } from '@nestjs/core';
 import { PrismaModule } from './prisma/prisma.module';
 import { AtGuard } from './shared/guards';
 import { AuthModule } from './web/auth/auth.module';
+import { MessageModule } from './web/messages/message.module';
 
 @Module({
-  imports: [ConfigModule.forRoot(), PrismaModule, AuthModule],
+  imports: [ConfigModule.forRoot(), PrismaModule, AuthModule, MessageModule],
   controllers: [AppController],
   providers: [
     {

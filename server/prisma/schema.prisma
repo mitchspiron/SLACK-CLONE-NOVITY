@@ -37,6 +37,8 @@ model Messages {
   sender      Users         @relation(fields: [senderId], references: [id])
   senderId    String
   recipientId String?
+  chats       Chats?        @relation(fields: [chatId], references: [id])
+  chatId      String?
   channels    Channels?     @relation(fields: [channelId], references: [id])
   channelId   String?
   status      MessageStatus @default(SENT)
@@ -57,6 +59,7 @@ model Chats {
   updatedAt DateTime @updatedAt
 
   Users_Chats Users_Chats[]
+  Messages    Messages[]
 
   @@index([userId])
 }
