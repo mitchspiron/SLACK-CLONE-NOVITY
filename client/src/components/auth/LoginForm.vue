@@ -23,7 +23,11 @@
           >
             Se connecter à votre compte
           </h1>
-          <form class="space-y-4 md:space-y-6" action="#">
+          <form
+            @submit.prevent="loginHandler"
+            class="space-y-4 md:space-y-6"
+            action="#"
+          >
             <div>
               <label
                 for="email"
@@ -34,6 +38,7 @@
                 type="email"
                 name="email"
                 id="email"
+                v-model="email"
                 class="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                 placeholder="name@company.com"
                 required
@@ -49,6 +54,7 @@
                 type="password"
                 name="password"
                 id="password"
+                v-model="password"
                 placeholder="••••••••"
                 class="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                 required
@@ -62,7 +68,8 @@
             </button>
             <p class="text-sm font-light text-gray-500 dark:text-gray-400">
               N'avez vous pas de compte ?
-              <router-link to="/register"
+              <router-link
+                to="/register"
                 href="#"
                 class="font-medium text-primary-600 hover:underline dark:text-primary-500"
                 >S'inscrire</router-link
@@ -74,3 +81,31 @@
     </div>
   </section>
 </template>
+
+<script setup lang="ts">
+import { ref } from "vue";
+import { useRouter } from "vue-router";
+import { useUserStore } from "../../stores/user.ts";
+import { useToast } from "vue-toastification";
+
+const email = ref("");
+const password = ref("");
+const router = useRouter();
+const userStore = useUserStore();
+const errorMessage = ref<string | null>(null);
+const toast = useToast();
+
+const loginHandler = async () => {
+  try {
+    errorMessage.value = null;
+    const response = await userStore.login(email.value, password.value);
+    if (response) {
+      console.log("MESSAGE_ERREUR", response?.data?.message);
+      router.push("/");
+      toast.success(response?.data?.message);
+    }
+  } catch (error: any) {
+    toast.warning(error.response?.data?.message);
+  }
+};
+</script>
