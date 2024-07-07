@@ -5,10 +5,14 @@ import App from "./App.vue";
 import "./index.css";
 import "flowbite/dist/flowbite.js";
 import router from "./router";
-
-import { createPinia } from "pinia";
 import Toast from "vue-toastification";
 import "vue-toastification/dist/index.css";
+
+import { createPinia } from "pinia";
+import piniaPluginPersistedstate from "pinia-plugin-persistedstate";
+
+const pinia = createPinia();
+pinia.use(piniaPluginPersistedstate);
 
 const options = {
   position: "top-center",

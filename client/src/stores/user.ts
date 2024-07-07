@@ -30,9 +30,22 @@ export const useUserStore = defineStore("user", {
       this.isConnected = false;
       this.user = {};
     },
+    setUser(data: any) {
+      this.user = data;
+    },
+    setConnected() {
+      this.isConnected = true;
+    },
+    setDisconnected() {
+      this.isConnected = false;
+    },
   },
   getters: {
     isLoggedIn: (state) => state.isConnected,
     me: (state) => state.user,
+  },
+  persist: {
+    storage: localStorage,
+    key: "slack_token",
   },
 });

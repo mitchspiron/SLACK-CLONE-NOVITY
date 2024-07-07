@@ -23,7 +23,43 @@
           >
             Créer un compte
           </h1>
-          <form class="space-y-4 md:space-y-6" action="#">
+          <form
+            @submit.prevent="registerHandler"
+            class="space-y-4 md:space-y-6"
+            action="#"
+          >
+            <div>
+              <label
+                for="firstname"
+                class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                >Votre prénom</label
+              >
+              <input
+                type="text"
+                name="firstname"
+                id="firstname"
+                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                placeholder="John"
+                v-model="firstname"
+                required
+              />
+            </div>
+            <div>
+              <label
+                for="firstname"
+                class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                >Votre nom</label
+              >
+              <input
+                type="text"
+                name="lastname"
+                id="lastname"
+                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                placeholder="Doe"
+                v-model="lastname"
+                required
+              />
+            </div>
             <div>
               <label
                 for="email"
@@ -36,7 +72,8 @@
                 id="email"
                 class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                 placeholder="name@company.com"
-                requiredSS
+                v-model="email"
+                required
               />
             </div>
             <div>
@@ -51,6 +88,7 @@
                 id="password"
                 placeholder="••••••••"
                 class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                v-model="password"
                 required
               />
             </div>
@@ -66,7 +104,6 @@
                 id="confirm-password"
                 placeholder="••••••••"
                 class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                required
               />
             </div>
             <button
@@ -89,3 +126,36 @@
     </div>
   </section>
 </template>
+
+<script setup lang="ts">
+import { ref } from "vue";
+import { useRouter } from "vue-router";
+import { useToast } from "vue-toastification";
+import { signUpUser } from "../../api/auth.api";
+
+const firstname = ref("");
+const lastname = ref("");
+const email = ref("");
+const password = ref("");
+const router = useRouter();
+const errorMessage = ref<string | null>(null);
+const toast = useToast();
+
+const registerHandler = async () => {
+  try {
+    errorMessage.value = null;
+    const response = await signUpUser(
+      firstname.value,
+      lastname.value,
+      email.value,
+      password.value
+    );
+    if (response) {
+      router.push("/login");
+      toast.success(response?.message);
+    }
+  } catch (error: any) {
+    toast.warning(error.response?.data?.message);
+  }
+};
+</script>

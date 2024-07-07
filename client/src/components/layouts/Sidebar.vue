@@ -23,7 +23,7 @@
     </a>
     <ul class="flex flex-col space-y-2 mt-12">
       <li>
-        <a href="#" class="flex items-center">
+        <router-link to="/message" class="flex items-center">
           <span
             class="flex items-center justify-center text-indigo-100 hover:bg-indigo-700 h-12 w-12 rounded-2xl"
           >
@@ -42,10 +42,10 @@
               ></path>
             </svg>
           </span>
-        </a>
+        </router-link>
       </li>
       <li>
-        <a href="#" class="flex items-center">
+        <router-link to="/channel" class="flex items-center">
           <span
             class="flex items-center justify-center text-indigo-100 hover:bg-indigo-700 h-12 w-12 rounded-2xl"
           >
@@ -64,7 +64,7 @@
               />
             </svg>
           </span>
-        </a>
+        </router-link>
       </li>
       <li>
         <a href="#" class="flex items-center">
