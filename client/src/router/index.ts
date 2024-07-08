@@ -5,8 +5,9 @@ import NotFound from "../views/NotFound.vue";
 import HomePage from "../views/HomePage.vue";
 import MessagePage from "../views/chats/MessagePage.vue";
 import ChannelPage from "../views/channels/ChannelPage.vue";
-/* import { decodeToken } from "../utils/decodeToken";
 import { useUserStore } from "../stores/user";
+/* import { decodeToken } from "../utils/decodeToken";
+
 
 const token = localStorage.getItem("slack_token");
 if (token) {
@@ -29,6 +30,7 @@ const routes = [
     component: HomePage,
     meta: {
       title: "Accueil",
+      noAccessNotLoggedIn: true,
     },
   },
   {
@@ -43,6 +45,7 @@ const routes = [
     component: LoginPage,
     meta: {
       title: "Se connecter",
+      noAccessTo: true,
     },
   },
   {
@@ -50,6 +53,7 @@ const routes = [
     component: RegisterPage,
     meta: {
       title: "S'inscrire",
+      noAccessTo: true,
     },
   },
   {
@@ -57,6 +61,7 @@ const routes = [
     component: MessagePage,
     meta: {
       title: "Messages",
+      noAccessNotLoggedIn: true,
     },
   },
   {
@@ -64,6 +69,7 @@ const routes = [
     component: ChannelPage,
     meta: {
       title: "Canaux",
+      noAccessNotLoggedIn: true,
     },
   },
 ];
@@ -77,6 +83,32 @@ router.afterEach((to) => {
   const title = to.meta.title as string;
   if (title) {
     document.title = title;
+  }
+});
+
+router.beforeEach((to, from, next) => {
+  if (to.matched.some((record) => record.meta.noAccessTo)) {
+    const userStore = useUserStore();
+    if (!userStore.isLoggedIn) {
+      next();
+      return;
+    }
+    next("/");
+  } else {
+    next();
+  }
+});
+
+router.beforeEach((to, from, next) => {
+  if (to.matched.some((record) => record.meta.noAccessNotLoggedIn)) {
+    const userStore = useUserStore();
+    if (userStore.isLoggedIn) {
+      next();
+      return;
+    }
+    next("/login");
+  } else {
+    next();
   }
 });
 

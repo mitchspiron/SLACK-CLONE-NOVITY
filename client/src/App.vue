@@ -17,12 +17,12 @@ onMounted(() => {
       const { iat, exp, ...filteredData } = decode;
       const userStore = useUserStore();
       userStore.setUser(filteredData);
-      userStore.setConnected()
+      userStore.setConnected();
     } else {
-      console.error("Le token décodé n'est pas un objet valide :", decode);
+      console.log("Le token décodé n'est pas un objet valide :", decode);
     }
   } else {
-    console.error("Aucun token trouvé dans le localStorage");
+    console.log("🚀 ~  Be a good developer");
   }
 });
 </script>
