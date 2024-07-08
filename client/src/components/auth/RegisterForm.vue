@@ -40,9 +40,11 @@
                 id="firstname"
                 class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                 placeholder="John"
-                v-model="firstname"
-                required
+                v-model="form.firstname"
               />
+              <span v-if="v$.firstname.$error">{{
+                v$.firstname.$errors[0].$message
+              }}</span>
             </div>
             <div>
               <label
@@ -56,9 +58,11 @@
                 id="lastname"
                 class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                 placeholder="Doe"
-                v-model="lastname"
-                required
+                v-model="form.lastname"
               />
+              <span v-if="v$.lastname.$error">{{
+                v$.lastname.$errors[0].$message
+              }}</span>
             </div>
             <div>
               <label
@@ -72,9 +76,11 @@
                 id="email"
                 class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                 placeholder="name@company.com"
-                v-model="email"
-                required
+                v-model="form.email"
               />
+              <span v-if="v$.email.$error">{{
+                v$.email.$errors[0].$message
+              }}</span>
             </div>
             <div>
               <label
@@ -88,9 +94,11 @@
                 id="password"
                 placeholder="••••••••"
                 class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                v-model="password"
-                required
+                v-model="form.password"
               />
+              <span v-if="v$.password.$error">{{
+                v$.password.$errors[0].$message
+              }}</span>
             </div>
             <div>
               <label
@@ -99,12 +107,16 @@
                 >Confirmation mot de passe</label
               >
               <input
-                type="confirm-password"
+                type="password"
                 name="confirm-password"
                 id="confirm-password"
                 placeholder="••••••••"
                 class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                v-model="form.confirm"
               />
+              <span v-if="v$.confirm.$error">{{
+                v$.confirm.$errors[0].$message
+              }}</span>
             </div>
             <button
               type="submit"
@@ -128,27 +140,69 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { computed, reactive, ref } from "vue";
 import { useRouter } from "vue-router";
 import { useToast } from "vue-toastification";
 import { signUpUser } from "../../api/auth.api";
+import { useVuelidate } from "@vuelidate/core";
+import {
+  sameAs,
+  maxLength,
+  minLength,
+  required,
+  email,
+} from "@vuelidate/validators";
 
-const firstname = ref("");
-const lastname = ref("");
-const email = ref("");
-const password = ref("");
 const router = useRouter();
 const errorMessage = ref<string | null>(null);
 const toast = useToast();
 
+const form = reactive({
+  firstname: "",
+  lastname: "",
+  email: "",
+  password: "",
+  confirm: "",
+});
+
+const rules = computed(() => {
+  return {
+    firstname: {
+      required,
+    },
+    lastname: {
+      required,
+    },
+    email: {
+      required,
+      email,
+    },
+    password: {
+      required,
+      minLength: minLength(8),
+      maxLength: maxLength(15),
+    },
+    confirm: {
+      required,
+      sameAs: sameAs(form.password),
+    },
+  };
+});
+
+const v$ = useVuelidate(rules, form);
+
 const registerHandler = async () => {
   try {
+    const result = await v$.value.$validate();
+    if (!result) {
+      return;
+    }
     errorMessage.value = null;
     const response = await signUpUser(
-      firstname.value,
-      lastname.value,
-      email.value,
-      password.value
+      form.firstname,
+      form.lastname,
+      form.email,
+      form.password
     );
     if (response) {
       router.push("/login");
@@ -159,3 +213,11 @@ const registerHandler = async () => {
   }
 };
 </script>
+
+<style scoped>
+span {
+  color: red;
+  font-size: 0.8em;
+  text-align: left;
+}
+</style>

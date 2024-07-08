@@ -101,10 +101,8 @@ const errorMessage = ref<string | null>(null);
 const toast = useToast();
 
 const form = reactive({
-  name: "",
   email: "",
   password: "",
-  confirmPassword: "",
 });
 
 const rules = computed(() => {
@@ -118,10 +116,6 @@ const rules = computed(() => {
       minLength: minLength(8),
       maxLength: maxLength(15),
     },
-    /* confirmPassword: {
-      required,
-      sameAs: sameAs(form.password),
-    }, */
   };
 });
 
