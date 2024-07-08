@@ -84,8 +84,10 @@ export class AuthService {
       }
 
       const payload: JwtPayload = {
-        userId: user.id,
+        id: user.id,
         email: user.email,
+        firstname: user.firstname,
+        lastname: user.lastname,
       };
 
       const access_token = this.jwtService.sign(payload);
@@ -107,7 +109,7 @@ export class AuthService {
 
   validatePayload(payload: JwtPayload) {
     return this.prisma.users.findUnique({
-      where: { id: payload.userId },
+      where: { id: payload.id },
     });
   }
 
