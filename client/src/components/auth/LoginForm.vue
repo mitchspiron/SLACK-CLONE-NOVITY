@@ -38,11 +38,13 @@
                 type="email"
                 name="email"
                 id="email"
-                v-model="email"
+                v-model="form.email"
                 class="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                 placeholder="name@company.com"
-                required
               />
+              <span v-if="v$.email.$error">{{
+                v$.email.$errors[0].$message
+              }}</span>
             </div>
             <div>
               <label
@@ -54,11 +56,14 @@
                 type="password"
                 name="password"
                 id="password"
-                v-model="password"
+                v-model="form.password"
                 placeholder="••••••••"
                 class="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                required
               />
+              <span v-if="v$.password.$error">{{
+                v$.password.$errors[0].$message
+              }}</span>
+              >
             </div>
             <button
               type="submit"
@@ -83,28 +88,67 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { computed, reactive, ref } from "vue";
 import { useRouter } from "vue-router";
 import { useUserStore } from "../../stores/user.ts";
 import { useToast } from "vue-toastification";
+import { useVuelidate } from "@vuelidate/core";
+import { maxLength, minLength, required, email } from "@vuelidate/validators";
 
-const email = ref("");
-const password = ref("");
 const router = useRouter();
 const userStore = useUserStore();
 const errorMessage = ref<string | null>(null);
 const toast = useToast();
 
+const form = reactive({
+  name: "",
+  email: "",
+  password: "",
+  confirmPassword: "",
+});
+
+const rules = computed(() => {
+  return {
+    email: {
+      required,
+      email,
+    },
+    password: {
+      required,
+      minLength: minLength(8),
+      maxLength: maxLength(15),
+    },
+    /* confirmPassword: {
+      required,
+      sameAs: sameAs(form.password),
+    }, */
+  };
+});
+
+const v$ = useVuelidate(rules, form);
+
 const loginHandler = async () => {
   try {
+    const result = await v$.value.$validate();
+    if (!result) {
+      return;
+    }
     errorMessage.value = null;
-    const response = await userStore.login(email.value, password.value);
+    const response = await userStore.login(form.email, form.password);
     if (response) {
       router.push("/");
-      toast.success(response?.data?.message);
+      toast.success("Hello " + response?.data.user.firstname);
     }
   } catch (error: any) {
     toast.warning(error.response?.data?.message);
   }
 };
 </script>
+
+<style scoped>
+span {
+  color: red;
+  font-size: 0.8em;
+  text-align: left;
+}
+</style>
