@@ -96,6 +96,7 @@
       </li>
     </ul>
     <button
+      @click="logoutHandler()"
       class="mt-auto flex items-center justify-center hover:bg-indigo-700 text-primary-100 rounded-2xl h-12 w-12"
     >
       <svg
@@ -118,3 +119,18 @@
     </button>
   </div>
 </template>
+
+<script setup>
+const router = useRouter();
+const userStore = useUserStore();
+import { useRouter } from "vue-router";
+import { useUserStore } from "../../stores/user.ts";
+import { useToast } from "vue-toastification";
+const toast = useToast();
+
+const logoutHandler = async () => {
+  await userStore.logout();
+  router.push("/login");
+  toast.success("See you next time");
+};
+</script>

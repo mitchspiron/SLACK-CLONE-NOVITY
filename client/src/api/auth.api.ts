@@ -1,4 +1,4 @@
-import { api, handleApiError } from "../configs/api";
+import { api } from "../configs/api";
 
 api.interceptors.request.use(
   (config) => {

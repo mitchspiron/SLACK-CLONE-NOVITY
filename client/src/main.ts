@@ -8,6 +8,10 @@ import router from "./router";
 import Toast from "vue-toastification";
 import "vue-toastification/dist/index.css";
 
+import { Buffer } from "buffer";
+
+window.Buffer = Buffer;
+
 import { createPinia } from "pinia";
 import piniaPluginPersistedstate from "pinia-plugin-persistedstate";
 

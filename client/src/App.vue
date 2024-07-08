@@ -4,8 +4,27 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
+import { onMounted } from "vue";
+import { decodeToken } from "./utils/decodeToken";
+import { useUserStore } from "./stores/user";
 
+onMounted(() => {
+  const token = localStorage.getItem("slack_token");
+  if (token) {
+    const decode = decodeToken(token);
+    if (decode && typeof decode === "object") {
+      const { iat, exp, ...filteredData } = decode;
+      const userStore = useUserStore();
+      userStore.setUser(filteredData);
+      userStore.setConnected()
+    } else {
+      console.error("Le token décodé n'est pas un objet valide :", decode);
+    }
+  } else {
+    console.error("Aucun token trouvé dans le localStorage");
+  }
+});
 </script>
 
 <style scoped>

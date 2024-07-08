@@ -5,6 +5,23 @@ import NotFound from "../views/NotFound.vue";
 import HomePage from "../views/HomePage.vue";
 import MessagePage from "../views/chats/MessagePage.vue";
 import ChannelPage from "../views/channels/ChannelPage.vue";
+/* import { decodeToken } from "../utils/decodeToken";
+import { useUserStore } from "../stores/user";
+
+const token = localStorage.getItem("slack_token");
+if (token) {
+  const decode = decodeToken(token);
+  if (decode && typeof decode === "object") {
+    const { iat, exp, ...filteredData } = decode;
+    console.log("🚀 ~ decode:", filteredData);
+    const userStore = useUserStore();
+    userStore.setUser(filteredData);
+  } else {
+    console.error("Le token décodé n'est pas un objet valide :", decode);
+  }
+} else {
+  console.error("Aucun token trouvé dans le localStorage");
+} */
 
 const routes = [
   {
