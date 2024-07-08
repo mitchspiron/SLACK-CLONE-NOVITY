@@ -14,7 +14,7 @@ export class SignUpDto {
   email: string;
 
   @IsNotEmpty()
-  @Matches(/(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).*$/)
+  @IsString()
   password: string;
 }
 
@@ -25,17 +25,5 @@ export class LoginDto {
 
   @IsNotEmpty()
   @IsString()
-  password: string;
-}
-
-export class ForgotPasswordDto {
-  @IsNotEmpty()
-  @IsEmail()
-  email: string;
-}
-
-export class ResetPasswordDto {
-  @IsNotEmpty()
-  @Matches(/(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).*$/)
   password: string;
 }

@@ -101,7 +101,7 @@ const loginHandler = async () => {
     const response = await userStore.login(email.value, password.value);
     if (response) {
       router.push("/");
-      toast.success("Hello "+response.data.user.firstname);
+      toast.success(response?.data?.message);
     }
   } catch (error: any) {
     toast.warning(error.response?.data?.message);
