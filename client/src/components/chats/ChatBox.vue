@@ -44,7 +44,7 @@
         </ul>
       </div>
     </div>
-    <div class="h-full overflow-hidden py-4" ref="scrollContent">
+    <div class="h-full overflow-hidden py-4" id="chat-area" ref="scrollContent">
       <div class="h-full overflow-y-auto">
         <!-- ---------------- -->
         <div
@@ -242,9 +242,6 @@ const fetchMessages = async () => {
         otherUser.users.lastname
       ).charAt(0),
     };
-
-    await nextTick();
-    scrollToBottom();
   } catch (error) {
     console.error("Échec de la récupération des messages:", error);
   }
@@ -253,7 +250,6 @@ const fetchMessages = async () => {
 const sendMessage = async () => {
   try {
     const messages = await getAllMessageByChatId(user.value, chatId.value);
-    console.log("🚀 ~ sendMessage ~ messages:", messages);
     if (messages) {
       const usersInChat = messages.data.users_in_chat.map(
         (user) => user.users.id
@@ -287,15 +283,20 @@ const scrollToBottom = () => {
   }
 };
 
+const scrollToEnd = () => {
+  const element = document.getElementById("chat-area")
+  element.scrollTop = element.scrollHeight;
+};
+
 onMounted(() => {
   fetchMessages();
   socket.on("arrival-message", () => {
     fetchMessages();
   });
+  scrollToEnd();
 });
 
-watch(messages, async () => {
-  await nextTick();
-  scrollToBottom();
+watch(messages, () => {
+  scrollToEnd();
 });
 </script>

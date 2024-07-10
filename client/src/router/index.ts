@@ -3,26 +3,10 @@ import LoginPage from "../views/auth/LoginPage.vue";
 import RegisterPage from "../views/auth/RegisterPage.vue";
 import NotFound from "../views/NotFound.vue";
 import HomePage from "../views/HomePage.vue";
+import ChatPage from "../views/chats/ChatPage.vue";
 import MessagePage from "../views/chats/MessagePage.vue";
 import ChannelPage from "../views/channels/ChannelPage.vue";
 import { useUserStore } from "../stores/user";
-/* import { decodeToken } from "../utils/decodeToken";
-
-
-const token = localStorage.getItem("slack_token");
-if (token) {
-  const decode = decodeToken(token);
-  if (decode && typeof decode === "object") {
-    const { iat, exp, ...filteredData } = decode;
-    console.log("🚀 ~ decode:", filteredData);
-    const userStore = useUserStore();
-    userStore.setUser(filteredData);
-  } else {
-    console.error("Le token décodé n'est pas un objet valide :", decode);
-  }
-} else {
-  console.error("Aucun token trouvé dans le localStorage");
-} */
 
 const routes = [
   {
@@ -57,8 +41,16 @@ const routes = [
     },
   },
   {
-    path: "/message/:id",
+    path: "/message",
     component: MessagePage,
+    meta: {
+      title: "Messages",
+      noAccessNotLoggedIn: true,
+    },
+  },
+  {
+    path: "/message/:id",
+    component: ChatPage,
     meta: {
       title: "Messages",
       noAccessNotLoggedIn: true,

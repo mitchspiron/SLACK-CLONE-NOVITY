@@ -2,8 +2,7 @@
   <div
     class="flex flex-col items-center py-4 flex-shrink-0 w-20 bg-primary-600 rounded-3xl"
   >
-    <a
-      href="#"
+    <router-link to="/"
       class="flex items-center justify-center h-12 w-12 bg-indigo-100 text-primary-600 rounded-full"
     >
       <svg
@@ -20,7 +19,7 @@
           d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"
         ></path>
       </svg>
-    </a>
+    </router-link>
     <ul class="flex flex-col space-y-2 mt-12">
       <li>
         <router-link to="/message" class="flex items-center">

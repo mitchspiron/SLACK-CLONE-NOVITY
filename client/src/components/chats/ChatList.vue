@@ -33,8 +33,12 @@
             {{ Array.from(user.otherUserFirstName)[0] }}
           </div>
           <div class="flex flex-col flex-grow ml-3">
-            <div class="text-sm font-medium">
-              {{ user.otherUserFirstName }}
+            <div class="flex items-center">
+              <div class="text-sm font-medium">{{ user.otherUserFirstName }}</div>
+              <div
+                v-if="user.otherUserStatus === 'ONLINE'"
+                class="h-2 w-2 rounded-full bg-green-500 ml-2"
+              ></div>
             </div>
             <div class="text-xs truncate w-40">
               {{ user.lastMessageContent }}
@@ -130,10 +134,6 @@ const getAllUserChats = async (user) => {
     const response = await getAllUserChatsByUserId(user.value);
     if (response) {
       users_chated.value = response.data.chats;
-      console.log(
-        "🚀 ~ getAllUserChats ~ response.data.chats:",
-        response.data.chats
-      );
     }
   } catch (error) {
     console.error("Failed to fetch users:", error);
