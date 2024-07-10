@@ -57,7 +57,7 @@ const routes = [
     },
   },
   {
-    path: "/message",
+    path: "/message/:id",
     component: MessagePage,
     meta: {
       title: "Messages",

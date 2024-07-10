@@ -63,7 +63,6 @@
               <span v-if="v$.password.$error">{{
                 v$.password.$errors[0].$message
               }}</span>
-              >
             </div>
             <button
               type="submit"

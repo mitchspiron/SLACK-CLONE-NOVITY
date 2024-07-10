@@ -20,12 +20,12 @@ export const signUpUser = async (
   password: string
 ) => {
   const response = await api.post("/auth/signup", {
-      firstname,
-      lastname,
-      email,
-      password,
-    });
-    return response.data;
+    firstname,
+    lastname,
+    email,
+    password,
+  });
+  return response.data;
 };
 
 export const loginUser = async (email: string, password: string) => {
@@ -35,5 +35,10 @@ export const loginUser = async (email: string, password: string) => {
 
 export const isLoggedIn = async () => {
   const response = await api.get("/auth/verify");
+  return response.data;
+};
+
+export const updateUserStatus = async (userId: any) => {
+  const response = await api.patch("/auth/change-status", { userId });
   return response.data;
 };

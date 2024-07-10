@@ -1,10 +1,15 @@
 import { defineStore } from "pinia";
-import { loginUser } from "../api/auth.api";
-import { isLoggedIn } from "../api/auth.api";
+import { loginUser, isLoggedIn, updateUserStatus } from "../api/auth.api";
 
 export const useUserStore = defineStore("user", {
   state: () => ({
-    user: {},
+    user: {
+      id: "",
+      email: "",
+      firstname: "",
+      lastname: "",
+      status: "",
+    },
     isConnected: false,
   }),
   actions: {
@@ -13,6 +18,7 @@ export const useUserStore = defineStore("user", {
       localStorage.setItem("slack_token", response.data.access_token);
       this.user = response.data.user;
       this.isConnected = true;
+      await updateUserStatus(this.user.id);
       return response;
     },
     async fetchUser() {
@@ -25,10 +31,17 @@ export const useUserStore = defineStore("user", {
         this.isConnected = false;
       }
     },
-    logout() {
+    async logout() {
+      await updateUserStatus(this.user.id);
       localStorage.removeItem("slack_token");
       this.isConnected = false;
-      this.user = {};
+      this.user = {
+        id: "",
+        email: "",
+        firstname: "",
+        lastname: "",
+        status: "",
+      };
     },
     setUser(data: any) {
       this.user = data;

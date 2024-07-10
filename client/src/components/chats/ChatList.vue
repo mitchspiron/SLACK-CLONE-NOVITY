@@ -19,30 +19,26 @@
     <div class="h-3/6 overflow-hidden relative pt-2">
       <div class="flex flex-col h-full overflow-y-auto -mx-4">
         <div
-          v-for="index in 25"
-          :key="index"
-          class="relative flex flex-row items-center p-4"
+          v-for="user in users_chated"
+          :key="user.id"
+          class="relative flex flex-row items-center p-4 cursor-pointer"
+          @click="goToChat(user.chatId)"
         >
-          <div class="absolute text-xs text-gray-500 right-0 top-0 mr-4 mt-3">
-            5 min
+          <div class="absolute text-xs text-gray-500 right-0 mr-4">
+            {{ moment(user.lastMessageCreatedAt).startOf("hour").fromNow() }}
           </div>
           <div
             class="flex items-center justify-center h-10 w-10 rounded-full bg-pink-500 text-pink-300 font-bold flex-shrink-0"
           >
-            T
+            {{ Array.from(user.otherUserFirstName)[0] }}
           </div>
           <div class="flex flex-col flex-grow ml-3">
-            <div class="text-sm font-medium">Cuberto</div>
-            <div class="text-xs truncate w-40">
-              Lorem ipsum dolor sit amet, consectetur adipisicing elit. Debitis,
-              doloribus?
+            <div class="text-sm font-medium">
+              {{ user.otherUserFirstName }}
             </div>
-          </div>
-          <div class="flex-shrink-0 ml-2 self-end mb-1">
-            <span
-              class="flex items-center justify-center h-5 w-5 bg-red-500 text-white text-xs rounded-full"
-              >5</span
-            >
+            <div class="text-xs truncate w-40">
+              {{ user.lastMessageContent }}
+            </div>
           </div>
         </div>
       </div>
@@ -57,21 +53,23 @@
     <div class="h-3/6 overflow-hidden relative pt-2">
       <div class="flex flex-col divide-y h-full overflow-y-auto -mx-4">
         <div
-          v-for="index in 15"
-          :key="index"
+          v-for="user in users_not_chated"
+          :key="user.id"
           class="flex flex-row items-center p-4"
         >
           <div
             class="flex items-center justify-center h-10 w-10 rounded-full bg-pink-500 text-pink-300 font-bold flex-shrink-0"
           >
-            T
+            {{ Array.from(user.firstname)[0] }}
           </div>
           <div class="flex flex-col flex-grow ml-3">
             <div class="flex items-center">
-              <div class="text-sm font-medium">Sarah D</div>
-              <div class="h-2 w-2 rounded-full bg-green-500 ml-2"></div>
+              <div class="text-sm font-medium">{{ user.firstname }}</div>
+              <div
+                v-if="user.status === 'ONLINE'"
+                class="h-2 w-2 rounded-full bg-green-500 ml-2"
+              ></div>
             </div>
-            <div class="text-xs truncate w-40">En ligne</div>
           </div>
           <button
             type="button"
@@ -97,3 +95,52 @@
     </div>
   </div>
 </template>
+
+<script setup>
+import moment from "moment";
+import { ref, onMounted } from "vue";
+import { useUserStore } from "../../stores/user.ts";
+import {
+  getAllUsersNotChatedByUser,
+  getAllUserChatsByUserId,
+} from "../../api/message.api";
+import { useRouter } from "vue-router";
+
+const router = useRouter();
+const userStore = useUserStore();
+
+const user = ref(userStore.user);
+const users_not_chated = ref([]);
+const users_chated = ref([]);
+
+const getUsersNotChated = async (user) => {
+  try {
+    const response = await getAllUsersNotChatedByUser(user.value);
+    if (response) {
+      users_not_chated.value = response.data.chats;
+    }
+  } catch (error) {
+    console.error("Failed to fetch users:", error);
+  }
+};
+
+const getAllUserChats = async (user) => {
+  try {
+    const response = await getAllUserChatsByUserId(user.value);
+    if (response) {
+      users_chated.value = response.data.chats;
+    }
+  } catch (error) {
+    console.error("Failed to fetch users:", error);
+  }
+};
+
+const goToChat = (link) => {
+  router.push(`/message/${link}`);
+};
+
+onMounted(() => {
+  getUsersNotChated(user);
+  getAllUserChats(user);
+});
+</script>

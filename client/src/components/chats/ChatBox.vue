@@ -6,10 +6,12 @@
       <div
         class="flex items-center justify-center h-10 w-10 rounded-full bg-pink-500 text-pink-100"
       >
-        T
+        {{ chatWith.avatar }}
       </div>
       <div class="flex flex-col ml-3">
-        <div class="font-semibold text-sm">Mitch Spiron</div>
+        <div class="font-semibold text-sm">
+          {{ chatWith.username }}
+        </div>
         <div class="text-xs text-gray-500">Active</div>
       </div>
       <div class="ml-auto">
@@ -42,41 +44,50 @@
     </div>
     <div class="h-full overflow-hidden py-4">
       <div class="h-full overflow-y-auto">
-        <div class="grid grid-cols-12 gap-y-2">
-          <div class="col-start-1 col-end-8 p-3 rounded-lg">
+        <!-- ---------------- -->
+        <div
+          v-for="message in messages"
+          :key="message.id"
+          class="grid grid-cols-12 gap-y-2"
+        >
+          <div
+            v-if="me.id !== message.senderId"
+            class="col-start-1 col-end-8 p-3 rounded-lg"
+          >
             <div class="flex items-start gap-2.5">
               <div
                 class="flex items-center justify-center h-10 w-10 rounded-full bg-indigo-500 flex-shrink-0"
               >
-                A
+                {{ Array.from(message.sender.firstname)[0] }}
               </div>
               <div class="flex flex-col gap-1 w-full max-w-[320px]">
                 <div class="flex items-center space-x-2 rtl:space-x-reverse">
                   <span
                     class="text-sm font-semibold text-gray-900 dark:text-white"
-                    >Bonnie Green</span
+                    >{{ message.sender.firstname }}
+                    {{ message.sender.lastname }}</span
                   >
                   <span
                     class="text-sm font-normal text-gray-500 dark:text-gray-400"
-                    >11:46</span
+                    >{{
+                      moment(message.createdAt).startOf("hour").fromNow()
+                    }}</span
                   >
                 </div>
                 <div
                   class="flex flex-col leading-1.5 p-4 border-gray-200 bg-gray-100 rounded-e-xl rounded-es-xl dark:bg-gray-700"
                 >
                   <p class="text-sm font-normal text-gray-900 dark:text-white">
-                    That's awesome. I think our users will really appreciate the
-                    improvements.
+                    {{ message.content }}
                   </p>
                 </div>
-                <span
-                  class="text-sm font-normal text-gray-500 dark:text-gray-400"
-                  >Delivered</span
-                >
               </div>
             </div>
           </div>
-          <div class="col-start-6 col-end-13 p-3 rounded-lg">
+          <div
+            v-if="me.id == message.senderId"
+            class="col-start-6 col-end-13 p-3 rounded-lg"
+          >
             <div class="flex items-center justify-end gap-2">
               <button
                 id="dropdownDefaultButton"
@@ -125,62 +136,31 @@
                 <div class="flex items-center space-x-2 rtl:space-x-reverse">
                   <span
                     class="text-sm font-normal text-gray-500 dark:text-gray-400"
-                    >11:46</span
+                    >{{
+                      moment(message.createdAt).startOf("hour").fromNow()
+                    }}</span
                   >
                 </div>
                 <div
                   class="flex flex-col leading-1.5 p-4 border-gray-200 bg-gray-100 rounded-xl dark:bg-gray-700"
                 >
                   <p class="text-sm font-normal text-gray-900 dark:text-white">
-                    That's awesome. I think our users will really appreciate the
-                    improvements.
+                    {{ message.content }}
                   </p>
                 </div>
                 <span
                   class="text-sm font-normal text-gray-500 dark:text-gray-400"
-                  >Delivered</span
-                >
-              </div>
-            </div>
-          </div>
-          <div class="col-start-1 col-end-8 p-3 rounded-lg">
-            <div class="flex items-start gap-2.5">
-              <div
-                class="flex items-center justify-center h-10 w-10 rounded-full bg-indigo-500 flex-shrink-0"
-              >
-                A
-              </div>
-              <div class="flex flex-col gap-1 w-full max-w-[320px]">
-                <div class="flex items-center space-x-2 rtl:space-x-reverse">
-                  <span
-                    class="text-sm font-semibold text-gray-900 dark:text-white"
-                    >Bonnie Green</span
-                  >
-                  <span
-                    class="text-sm font-normal text-gray-500 dark:text-gray-400"
-                    >11:46</span
-                  >
-                </div>
-                <div
-                  class="flex flex-col leading-1.5 p-4 border-gray-200 bg-gray-100 rounded-e-xl rounded-es-xl dark:bg-gray-700"
-                >
-                  <p class="text-sm font-normal text-gray-900 dark:text-white">
-                    That's awesome. I think our users will really appreciate the
-                    improvements.
-                  </p>
-                </div>
-                <span
-                  class="text-sm font-normal text-gray-500 dark:text-gray-400"
-                  >Delivered</span
+                  >{{ message.status == "SENT" ? "sent" : "seen" }}</span
                 >
               </div>
             </div>
           </div>
         </div>
+        <!-- ---------------------- -->
       </div>
     </div>
 
-    <form>
+    <form @submit.prevent="sendMessage">
       <label for="chat" class="sr-only">Laissez un message</label>
       <div
         class="flex items-center px-3 py-2 rounded-lg bg-gray-50 dark:bg-gray-700"
@@ -190,6 +170,7 @@
           rows="1"
           class="block mx-4 p-2.5 w-full text-sm text-gray-900 bg-white rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
           placeholder="Laissez un message..."
+          v-model="content"
         ></textarea>
         <button
           type="submit"
@@ -212,3 +193,82 @@
     </form>
   </div>
 </template>
+
+<script setup>
+import moment from "moment";
+import { getAllMessageByChatId, createMessage } from "../../api/message.api";
+import { useUserStore } from "../../stores/user.ts";
+import { computed, onMounted, reactive, ref, toRefs } from "vue";
+import { useRouter } from "vue-router";
+
+const userStore = useUserStore();
+const router = useRouter();
+
+const chatWith = ref({});
+const messages = ref([]);
+const user = ref(userStore.user);
+const me = ref(userStore.me);
+const chatId = ref(router.currentRoute.value.params.id);
+let content = ref("");
+
+const fetchMessages = async () => {
+  try {
+    const response = await getAllMessageByChatId(user.value, chatId.value);
+    messages.value = response.data.messages;
+    const usersInChat = response.data.users_in_chat.map(
+      (user) => user.users.id
+    );
+    const currentUser = user.value.id;
+    let otherUser;
+
+    if (usersInChat.includes(currentUser)) {
+      otherUser = response.data.users_in_chat.find(
+        (user) => user.users.id !== currentUser
+      );
+    }
+
+    chatWith.value = {
+      id: otherUser.users.id,
+      username: otherUser.users.firstname + " " + otherUser.users.lastname,
+      status: otherUser.users.status,
+      avatar: (
+        otherUser.users.firstname +
+        " " +
+        otherUser.users.lastname
+      ).charAt(0),
+    };
+  } catch (error) {
+    console.error("Échec de la récupération des messages:", error);
+  }
+};
+
+const sendMessage = async () => {
+  try {
+    const messages = await getAllMessageByChatId(user.value, chatId.value);
+    console.log("🚀 ~ sendMessage ~ messages:", messages);
+    if (messages) {
+      const usersInChat = messages.data.users_in_chat.map(
+        (user) => user.users.id
+      );
+      const currentUser = user.value.id;
+      let otherUser;
+
+      if (usersInChat.includes(currentUser)) {
+        otherUser = messages.data.users_in_chat.find(
+          (user) => user.users.id !== currentUser
+        );
+      }
+      const recipientId = otherUser.users.id;
+      await createMessage(user.value, content.value, recipientId);
+      content.value = ""
+      fetchMessages();
+    }
+  } catch (error) {
+    console.error("Échec lors de l'envoi des messages:", error);
+  }
+};
+
+onMounted(() => {
+  fetchMessages();
+});
+</script>
