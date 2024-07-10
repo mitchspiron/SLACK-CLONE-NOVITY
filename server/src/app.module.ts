@@ -8,6 +8,7 @@ import { AtGuard } from './shared/guards';
 import { AuthModule } from './web/auth/auth.module';
 import { MessageModule } from './web/messages/message.module';
 import { ChannelModule } from './web/channels/channel.module';
+import { SocketModule } from './socket/socket.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { ChannelModule } from './web/channels/channel.module';
     AuthModule,
     ChannelModule,
     MessageModule,
+    SocketModule,
   ],
   controllers: [AppController],
   providers: [

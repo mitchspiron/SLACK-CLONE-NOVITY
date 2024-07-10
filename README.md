@@ -36,3 +36,5 @@ You can test all api endpoint by checking all controllers in the backend.
 You can navigate in front too. Till now, only auth works. I have a late due to a power cut from morning to afternoon. My commit datetime can prove it.
 
 Les parties cotées serveurs fonctionnent toutes. Il ne reste que l'implémentation du chat et du canal et tout sera OK.
+
+A request from Trello will be sent to you so that you can chek my task management.
