@@ -105,6 +105,7 @@ import {
   getAllUserChatsByUserId,
 } from "../../api/message.api";
 import { useRouter } from "vue-router";
+import { socket } from "../../configs/socket";
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -129,6 +130,10 @@ const getAllUserChats = async (user) => {
     const response = await getAllUserChatsByUserId(user.value);
     if (response) {
       users_chated.value = response.data.chats;
+      console.log(
+        "🚀 ~ getAllUserChats ~ response.data.chats:",
+        response.data.chats
+      );
     }
   } catch (error) {
     console.error("Failed to fetch users:", error);
@@ -142,5 +147,8 @@ const goToChat = (link) => {
 onMounted(() => {
   getUsersNotChated(user);
   getAllUserChats(user);
+  socket.on("arrival-message", () => {
+    getAllUserChats(user);
+  });
 });
 </script>

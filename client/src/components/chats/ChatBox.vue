@@ -12,7 +12,9 @@
         <div class="font-semibold text-sm">
           {{ chatWith.username }}
         </div>
-        <div class="text-xs text-gray-500">Active</div>
+        <div class="text-xs text-gray-500">
+          {{ chatWith.status == "ONLINE" ? "En ligne" : "Hors ligne" }}
+        </div>
       </div>
       <div class="ml-auto">
         <ul class="flex flex-row items-center space-x-2">
@@ -42,7 +44,7 @@
         </ul>
       </div>
     </div>
-    <div class="h-full overflow-hidden py-4">
+    <div class="h-full overflow-hidden py-4" ref="scrollContent">
       <div class="h-full overflow-y-auto">
         <!-- ---------------- -->
         <div
@@ -198,8 +200,9 @@
 import moment from "moment";
 import { getAllMessageByChatId, createMessage } from "../../api/message.api";
 import { useUserStore } from "../../stores/user.ts";
-import { computed, onMounted, reactive, ref, toRefs } from "vue";
+import { onMounted, ref, watch, nextTick } from "vue";
 import { useRouter } from "vue-router";
+import { socket } from "../../configs/socket";
 
 const userStore = useUserStore();
 const router = useRouter();
@@ -210,6 +213,8 @@ const user = ref(userStore.user);
 const me = ref(userStore.me);
 const chatId = ref(router.currentRoute.value.params.id);
 let content = ref("");
+
+const scrollContent = ref(null);
 
 const fetchMessages = async () => {
   try {
@@ -237,6 +242,9 @@ const fetchMessages = async () => {
         otherUser.users.lastname
       ).charAt(0),
     };
+
+    await nextTick();
+    scrollToBottom();
   } catch (error) {
     console.error("Échec de la récupération des messages:", error);
   }
@@ -259,16 +267,35 @@ const sendMessage = async () => {
         );
       }
       const recipientId = otherUser.users.id;
-      await createMessage(user.value, content.value, recipientId);
-      content.value = ""
-      fetchMessages();
+      const response = await createMessage(
+        user.value,
+        content.value,
+        recipientId
+      );
+      socket.emit("send-message", response.data);
+      content.value = "";
+      return response;
     }
   } catch (error) {
     console.error("Échec lors de l'envoi des messages:", error);
   }
 };
 
+const scrollToBottom = () => {
+  if (scrollContent.value) {
+    scrollContent.value.scrollTop = scrollContent.value.scrollHeight;
+  }
+};
+
 onMounted(() => {
   fetchMessages();
+  socket.on("arrival-message", () => {
+    fetchMessages();
+  });
+});
+
+watch(messages, async () => {
+  await nextTick();
+  scrollToBottom();
 });
 </script>
