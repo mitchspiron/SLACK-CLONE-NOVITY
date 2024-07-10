@@ -27,3 +27,9 @@ export class LoginDto {
   @IsString()
   password: string;
 }
+
+export class ChangeStatusDto {
+  @IsNotEmpty()
+  @IsString()
+  userId: string;
+}

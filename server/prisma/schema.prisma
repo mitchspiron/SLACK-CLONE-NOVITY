@@ -34,8 +34,8 @@ model Users {
 model Messages {
   id          Int           @id @default(autoincrement())
   content     String        @db.Text
-  sender      Users         @relation(fields: [senderId], references: [id])
   senderId    String
+  recipient   Users?        @relation(fields: [recipientId], references: [id])
   recipientId String?
   chats       Chats?        @relation(fields: [chatId], references: [id])
   chatId      String?
@@ -48,6 +48,7 @@ model Messages {
 
   @@index([senderId])
   @@index([channelId])
+  @@index([chatId])
 }
 
 model Chats {

@@ -8,11 +8,13 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
-import { LoginDto, SignUpDto } from './dto';
+import { ChangeStatusDto, LoginDto, SignUpDto } from './dto';
 import { GlobalResponseType, ResponseMap } from '../../utils/type';
 import { AuthHelper } from './auth.helper';
 import { JwtPayload } from '../../utils/interface';
 import { Request, Response } from 'express';
+import { Users } from '@prisma/client';
+import { USER_STATUS } from 'src/utils/enum';
 
 @Injectable()
 export class AuthService {
@@ -66,6 +68,7 @@ export class AuthService {
           email: true,
           firstname: true,
           lastname: true,
+          status: true,
           password: true,
         },
       });
@@ -88,6 +91,7 @@ export class AuthService {
         email: user.email,
         firstname: user.firstname,
         lastname: user.lastname,
+        status: user.status,
       };
 
       const access_token = this.jwtService.sign(payload);
@@ -137,5 +141,35 @@ export class AuthService {
       throw new UnauthorizedException('Invalid Session');
     }
     res.send(data);
+  }
+
+  async updateUserStatus(dto: ChangeStatusDto) {
+    try {
+      const userExists = await this.prisma.users.findUnique({
+        where: {
+          id: dto.userId,
+        },
+      });
+
+      if (!userExists) {
+        throw new NotFoundException('User not found');
+      }
+
+      const updatedUser = await this.prisma.users.update({
+        where: { id: userExists.id },
+        data: {
+          status:
+            userExists.status == USER_STATUS.OFFLINE
+              ? USER_STATUS.ONLINE
+              : USER_STATUS.OFFLINE,
+        },
+      });
+      return updatedUser;
+    } catch (err) {
+      throw new HttpException(
+        err,
+        err.status || HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 }

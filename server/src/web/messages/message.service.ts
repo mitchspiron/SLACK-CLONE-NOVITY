@@ -3,6 +3,7 @@ import {
   HttpException,
   HttpStatus,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -29,14 +30,14 @@ export class MessageService {
         throw new BadRequestException(`Sender does not exist!`);
       }
 
-      if (!dto.recipientId && !dto.chatId && !dto.channelId) {
+      if (!dto.recipientId && !dto.channelId) {
         throw new BadRequestException(
           `Recipient and Chat or Channel is required!`,
         );
       }
 
       let newMessage: Messages = null;
-      if (dto.recipientId && dto.chatId && !dto.channelId) {
+      if (dto.recipientId && !dto.channelId) {
         const recipientExists = await this.prisma.users.findUnique({
           where: { id: dto.recipientId },
         });
@@ -45,11 +46,28 @@ export class MessageService {
           throw new BadRequestException(`Recipient does not exist!`);
         }
 
-        const chatExists = await this.prisma.chats.findUnique({
-          where: { id: dto.chatId },
+        const sharedChats = await this.prisma.users_Chats.findMany({
+          where: {
+            userId: user.id,
+            chatId: {
+              in: (
+                await this.prisma.users_Chats.findMany({
+                  where: {
+                    userId: dto.recipientId,
+                  },
+                  select: {
+                    chatId: true,
+                  },
+                })
+              ).map((uc) => uc.chatId),
+            },
+          },
+          select: {
+            chatId: true,
+          },
         });
 
-        if (!chatExists) {
+        if (sharedChats.length == 0) {
           const newChat = await this.prisma.chats.create({
             data: {
               userId: user.id,
@@ -88,7 +106,7 @@ export class MessageService {
 
         const usersChat = await this.prisma.users_Chats.findMany({
           where: {
-            chatId: chatExists.id,
+            chatId: sharedChats[0].chatId,
           },
           select: {
             userId: true,
@@ -111,7 +129,7 @@ export class MessageService {
             content: dto.content,
             senderId: sender,
             recipientId: recipient,
-            chatId: chatExists.id,
+            chatId: sharedChats[0].chatId,
           },
         });
 
@@ -123,7 +141,7 @@ export class MessageService {
         );
       }
 
-      if (!dto.recipientId && !dto.chatId && dto.channelId) {
+      if (!dto.recipientId && dto.channelId) {
         const channelExists = await this.prisma.channels.findUnique({
           where: { id: dto.channelId },
         });
@@ -241,15 +259,12 @@ export class MessageService {
     }
   }
 
-  async getAllMessageByChatId(
-    user: Users,
-    dto: GetAllMessageByChatDto,
-  ): GlobalResponseType {
+  async getAllMessageByChatId(user: Users, chat: string): GlobalResponseType {
     try {
       const userChat = await this.prisma.users_Chats.findFirst({
         where: {
           userId: user.id,
-          chatId: dto.chatId,
+          chatId: chat,
         },
       });
 
@@ -257,22 +272,85 @@ export class MessageService {
         throw new UnauthorizedException('User not allowed to access this chat');
       }
 
-      const chatExists = await this.prisma.messages.findMany({
+      const messages = await this.prisma.messages.findMany({
         where: {
-          chatId: userChat.chatId
+          chatId: userChat.chatId,
         },
         orderBy: {
           updatedAt: 'asc',
         },
+        select: {
+          id: true,
+          content: true,
+          senderId: true,
+          status: true,
+          createdAt: true,
+          recipient: {
+            select: {
+              id: true,
+              firstname: true,
+              lastname: true,
+            },
+          },
+        },
       });
 
-      if (chatExists.length == 0) {
+      if (messages.length == 0) {
         throw new BadRequestException('No message found!');
       }
 
+      const usersInChat = await this.prisma.users_Chats.findMany({
+        where: {
+          chatId: chat,
+        },
+        select: {
+          users: {
+            select: {
+              id: true,
+              firstname: true,
+              lastname: true,
+              status: true,
+            },
+          },
+        },
+      });
+
+      // Récupérer les détails des expéditeurs (sender)
+      const senderIds = [...new Set(messages.map((msg) => msg.senderId))]; // Obtenir les IDs uniques des expéditeurs
+      const senders = await this.prisma.users.findMany({
+        where: {
+          id: {
+            in: senderIds,
+          },
+        },
+        select: {
+          id: true,
+          firstname: true,
+          lastname: true,
+        },
+      });
+
+      // Créer une map pour un accès rapide aux détails des expéditeurs
+      const senderMap = senders.reduce((map, sender) => {
+        map[sender.id] = {
+          firstname: sender.firstname,
+          lastname: sender.lastname,
+        };
+        return map;
+      }, {});
+
+      // Ajouter les détails des expéditeurs aux messages
+      const chatExists = messages.map((message) => ({
+        ...message,
+        sender: {
+          firstname: senderMap[message.senderId].firstname,
+          lastname: senderMap[message.senderId].lastname,
+        },
+      }));
       return ResponseMap(
         {
           messages: chatExists,
+          users_in_chat: usersInChat,
         },
         'Chat Messages Fetched Successfully',
       );
@@ -286,17 +364,87 @@ export class MessageService {
 
   async getAllUserChatsByUserId(user: Users): GlobalResponseType {
     try {
-      const userChats = await this.prisma.users_Chats.findMany({
+      const userMessages = await this.prisma.chats.findMany({
+        where: {
+          Users_Chats: {
+            some: {
+              userId: user.id,
+            },
+          },
+        },
+        include: {
+          Messages: {
+            orderBy: {
+              createdAt: 'desc',
+            },
+            take: 1,
+            include: {
+              recipient: true,
+            },
+          },
+          Users_Chats: {
+            include: {
+              users: true,
+            },
+          },
+        },
+      });
+
+      if (userMessages.length == 0) {
+        throw new BadRequestException('No user chat found');
+      }
+
+      const results = userMessages.map((chat) => {
+        const lastMessage = chat.Messages[0];
+        const otherUser = chat.Users_Chats.find(
+          (uc) => uc.userId !== user.id,
+        ).users;
+
+        return {
+          chatId: chat.id,
+          lastMessageContent: lastMessage?.content,
+          lastMessageCreatedAt: lastMessage?.createdAt,
+          otherUserFirstName: otherUser.firstname,
+        };
+      });
+
+      return ResponseMap(
+        {
+          chats: results,
+        },
+        'User Chats Fetched Successfully',
+      );
+    } catch (err) {
+      throw new HttpException(
+        err,
+        err.status || HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async getAllUsersNotChatedByUser(user: Users): GlobalResponseType {
+    try {
+      const myChats = await this.prisma.users_Chats.findMany({
         where: {
           userId: user.id,
         },
-        include: {
-          chats: {
-            include: {
-              Messages: {
-                take: 1,
-                orderBy: {
-                  createdAt: 'desc',
+        select: {
+          chatId: true,
+        },
+      });
+
+      const myChatIds = myChats.map((chat) => chat.chatId);
+
+      const usersWithoutMyChats = await this.prisma.users.findMany({
+        where: {
+          id: {
+            not: user.id,
+          },
+          AND: {
+            Users_Chats: {
+              none: {
+                chatId: {
+                  in: myChatIds,
                 },
               },
             },
@@ -304,15 +452,15 @@ export class MessageService {
         },
       });
 
-      if (userChats.length == 0) {
-        throw new BadRequestException('No user chat found');
+      if (usersWithoutMyChats.length == 0) {
+        throw new NotFoundException('You are chating with all users');
       }
 
       return ResponseMap(
         {
-          chats: userChats,
+          chats: usersWithoutMyChats,
         },
-        'User Chats Fetched Successfully',
+        'Users Fetched Successfully',
       );
     } catch (err) {
       throw new HttpException(

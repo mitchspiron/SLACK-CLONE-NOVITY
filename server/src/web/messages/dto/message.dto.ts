@@ -17,10 +17,6 @@ export class AddMessageDto {
 
   @IsOptional()
   @IsString()
-  chatId: string;
-
-  @IsOptional()
-  @IsString()
   channelId: string;
 }
 

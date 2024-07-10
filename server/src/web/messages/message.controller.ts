@@ -5,6 +5,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Param,
   Patch,
   Post,
 } from '@nestjs/common';
@@ -50,18 +51,26 @@ export class MessageController {
     return await this.messageService.deleteMessageById(user, dto);
   }
 
-  @Get('chat')
+  @Post('chat/:id')
   @HttpCode(HttpStatus.OK)
   async getAllMessageByChatId(
     @User() user: UserEntity,
-    @Body() dto: GetAllMessageByChatDto,
+    @Param('id') chat: string,
   ): GlobalResponseType {
-    return await this.messageService.getAllMessageByChatId(user, dto);
+    return await this.messageService.getAllMessageByChatId(user, chat);
   }
 
   @Get('user-chat')
   @HttpCode(HttpStatus.OK)
   async getAllUserChatsByUserId(@User() user: UserEntity): GlobalResponseType {
     return await this.messageService.getAllUserChatsByUserId(user);
+  }
+
+  @Get('user-not-chat')
+  @HttpCode(HttpStatus.OK)
+  async getAllUsersNotChatedByUser(
+    @User() user: UserEntity,
+  ): GlobalResponseType {
+    return await this.messageService.getAllUsersNotChatedByUser(user);
   }
 }
