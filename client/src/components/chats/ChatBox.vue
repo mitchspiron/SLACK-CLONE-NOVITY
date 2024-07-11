@@ -277,6 +277,7 @@ const sendMessage = async () => {
         content.value,
         recipientId
       );
+      console.log("MESSAGE", response.data.message.chatId)
       socket.emit("send-message", response.data);
       content.value = "";
       return response;

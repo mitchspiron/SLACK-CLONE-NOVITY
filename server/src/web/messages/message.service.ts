@@ -393,6 +393,12 @@ export class MessageService {
         throw new BadRequestException('No user chat found');
       }
 
+      userMessages.sort((a, b) => {
+        const dateA: any = a.Messages[0]?.createdAt;
+        const dateB: any = b.Messages[0]?.createdAt;
+        return dateB - dateA; // Trier par ordre décroissant
+      });
+
       const results = userMessages.map((chat) => {
         const lastMessage = chat.Messages[0];
         const otherUser = chat.Users_Chats.find(
@@ -403,6 +409,7 @@ export class MessageService {
           chatId: chat.id,
           lastMessageContent: lastMessage?.content,
           lastMessageCreatedAt: lastMessage?.createdAt,
+          lastMessageSenderId: lastMessage?.senderId,
           otherUserFirstName: otherUser.firstname,
           otherUserLastName: otherUser.lastname,
           otherUserStatus: otherUser.status,

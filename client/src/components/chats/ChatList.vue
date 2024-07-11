@@ -87,7 +87,11 @@
               ></div>
             </div>
             <div class="text-xs truncate w-40">
-              {{ user.lastMessageContent }}
+              {{
+                me.id == user.lastMessageSenderId
+                  ? "vous: " + user.lastMessageContent
+                  : user.lastMessageContent
+              }}
             </div>
           </div>
         </div>
@@ -168,6 +172,7 @@
             </div>
           </div>
           <button
+            @click="sendMessage(user.id)"
             type="button"
             class="px-3 py-2 me-2 text-xs font-medium text-center inline-flex items-center text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
           >
@@ -200,6 +205,7 @@ import { useUserStore } from "../../stores/user.ts";
 import {
   getAllUsersNotChatedByUser,
   getAllUserChatsByUserId,
+  createMessage,
 } from "../../api/message.api";
 import { useRouter } from "vue-router";
 import { socket } from "../../configs/socket";
@@ -213,6 +219,7 @@ const users_not_chated = ref([]);
 const users_chated = ref([]);
 const userSearchQuery = ref("");
 const chatSearchQuery = ref("");
+const recipientId = ref("");
 
 const getUsersNotChated = async (user) => {
   try {
@@ -238,6 +245,23 @@ const getAllUserChats = async (user) => {
 
 const goToChat = (link) => {
   router.push(`/message/${link}`);
+};
+
+const sendMessage = async (userId) => {
+  try {
+    recipientId.value = userId;
+    console.log("🚀 ~ sendMessage ~ recipientId.value:", recipientId.value);
+    const response = await createMessage(
+      user.value,
+      "Salut 👋",
+      recipientId.value
+    );
+    socket.emit("send-message", response.data);
+    goToChat(response.data.message.chatId);
+    return response;
+  } catch (error) {
+    console.error("An error occured while sending message:", error);
+  }
 };
 
 const filteredSubscribedUsers = computed(() => {
