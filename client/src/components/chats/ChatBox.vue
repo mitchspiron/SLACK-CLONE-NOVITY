@@ -173,6 +173,7 @@
           class="block mx-4 p-2.5 w-full text-sm text-gray-900 bg-white rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
           placeholder="Laissez un message..."
           v-model="content"
+          required
         ></textarea>
         <button
           type="submit"
@@ -205,7 +206,7 @@ import {
   editMessage,
 } from "../../api/message.api";
 import { useUserStore } from "../../stores/user.ts";
-import { onMounted, ref, watch, nextTick } from "vue";
+import { onMounted, ref, watch, nextTick, onUpdated } from "vue";
 import { useRouter } from "vue-router";
 import { socket } from "../../configs/socket";
 
@@ -319,15 +320,11 @@ const updateMessage = async () => {
   }
 };
 
-const scrollToBottom = () => {
-  if (scrollContent.value) {
-    scrollContent.value.scrollTop = scrollContent.value.scrollHeight;
-  }
-};
-
 const scrollToEnd = () => {
-  const element = document.getElementById("chat-area");
-  element.scrollTop = element.scrollHeight;
+  const element = scrollContent.value;
+  if (element) {
+    element.scrollTop = element.scrollHeight;
+  }
 };
 
 const toggleDropdown = (messageId) => {
@@ -349,7 +346,9 @@ onMounted(() => {
   scrollToEnd();
 });
 
-watch(messages, () => {
-  scrollToEnd();
+onUpdated(() => {
+  nextTick(() => {
+    scrollToEnd();
+  });
 });
 </script>

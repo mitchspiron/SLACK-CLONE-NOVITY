@@ -404,6 +404,7 @@ export class MessageService {
           lastMessageContent: lastMessage?.content,
           lastMessageCreatedAt: lastMessage?.createdAt,
           otherUserFirstName: otherUser.firstname,
+          otherUserLastName: otherUser.lastname,
           otherUserStatus: otherUser.status,
         };
       });
