@@ -327,10 +327,10 @@ export class MessageService {
           id: true,
           firstname: true,
           lastname: true,
+          status: true,
         },
       });
 
-      // Créer une map pour un accès rapide aux détails des expéditeurs
       const senderMap = senders.reduce((map, sender) => {
         map[sender.id] = {
           firstname: sender.firstname,
@@ -339,7 +339,6 @@ export class MessageService {
         return map;
       }, {});
 
-      // Ajouter les détails des expéditeurs aux messages
       const chatExists = messages.map((message) => ({
         ...message,
         sender: {
@@ -405,6 +404,7 @@ export class MessageService {
           lastMessageContent: lastMessage?.content,
           lastMessageCreatedAt: lastMessage?.createdAt,
           otherUserFirstName: otherUser.firstname,
+          otherUserStatus: otherUser.status,
         };
       });
 

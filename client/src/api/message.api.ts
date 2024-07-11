@@ -13,17 +13,28 @@ api.interceptors.request.use(
   }
 );
 
-export const createMessage = async (user: any, content: string, recipientId: string) => {
+export const createMessage = async (
+  user: any,
+  content: string,
+  recipientId: string
+) => {
   const response = await api.post("/message", { user, content, recipientId });
   return response.data;
 };
 
-export const editMessage = async () => {
-  /* const response = await api.post("/auth/login", { email, password });
-    return response.data; */
+export const editMessage = async (
+  user: any,
+  content: string,
+  messageId: string
+) => {
+  const response = await api.patch("/message", { user, content, messageId });
+  return response;
 };
 
-export const deleteMessageById = () => {};
+export const deleteMessageById = async (user: any, messageId: string) => {
+  const response = await api.post("/message/delete", { user, messageId });
+  return response.data;
+};
 
 export const getAllMessageByChatId = async (user: any, chatId: string) => {
   const response = await api.post(`/message/chat/${chatId}`, { user });

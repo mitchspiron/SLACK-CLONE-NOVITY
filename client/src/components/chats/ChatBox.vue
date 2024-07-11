@@ -46,7 +46,6 @@
     </div>
     <div class="h-full overflow-hidden py-4" id="chat-area" ref="scrollContent">
       <div class="h-full overflow-y-auto">
-        <!-- ---------------- -->
         <div
           v-for="message in messages"
           :key="message.id"
@@ -92,6 +91,7 @@
           >
             <div class="flex items-center justify-end gap-2">
               <button
+                @click="toggleDropdown(message.id)"
                 id="dropdownDefaultButton"
                 data-dropdown-toggle="dropdown"
                 data-dropdown-placement="bottom-end"
@@ -111,8 +111,9 @@
                 </svg>
               </button>
               <div
+                v-show="message.isDropdownVisible"
                 id="dropdown"
-                class="z-10 hidden bg-white divide-y divide-gray-100 rounded-lg shadow w-40 dark:bg-gray-500 dark:divide-gray-600"
+                class="z-10 bg-white divide-y divide-gray-100 rounded-lg shadow w-40 dark:bg-gray-500 dark:divide-gray-600"
               >
                 <ul
                   class="py-2 text-sm text-gray-700 dark:text-gray-200"
@@ -120,15 +121,15 @@
                 >
                   <li>
                     <a
-                      href="#"
-                      class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
+                      @click="editMessageContent(message)"
+                      class="cursor-pointer block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
                       >Modifier</a
                     >
                   </li>
                   <li>
                     <a
-                      href="#"
-                      class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
+                      @click="removeMessage(message.id)"
+                      class="cursor-pointer block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
                       >Supprimer</a
                     >
                   </li>
@@ -158,11 +159,10 @@
             </div>
           </div>
         </div>
-        <!-- ---------------------- -->
       </div>
     </div>
 
-    <form @submit.prevent="sendMessage">
+    <form @submit.prevent="isEditing ? updateMessage() : sendMessage()">
       <label for="chat" class="sr-only">Laissez un message</label>
       <div
         class="flex items-center px-3 py-2 rounded-lg bg-gray-50 dark:bg-gray-700"
@@ -198,7 +198,12 @@
 
 <script setup>
 import moment from "moment";
-import { getAllMessageByChatId, createMessage } from "../../api/message.api";
+import {
+  getAllMessageByChatId,
+  createMessage,
+  deleteMessageById,
+  editMessage,
+} from "../../api/message.api";
 import { useUserStore } from "../../stores/user.ts";
 import { onMounted, ref, watch, nextTick } from "vue";
 import { useRouter } from "vue-router";
@@ -213,6 +218,9 @@ const user = ref(userStore.user);
 const me = ref(userStore.me);
 const chatId = ref(router.currentRoute.value.params.id);
 let content = ref("");
+let isDropdownVisible = ref(false);
+let isEditing = ref(false);
+let editMessageId = ref(null);
 
 const scrollContent = ref(null);
 
@@ -243,7 +251,7 @@ const fetchMessages = async () => {
       ).charAt(0),
     };
   } catch (error) {
-    console.error("Échec de la récupération des messages:", error);
+    console.error("An error occured while fetching messages:", error);
   }
 };
 
@@ -273,7 +281,41 @@ const sendMessage = async () => {
       return response;
     }
   } catch (error) {
-    console.error("Échec lors de l'envoi des messages:", error);
+    console.error("An error occured while sending message:", error);
+  }
+};
+
+const removeMessage = async (messageId) => {
+  try {
+    const messages = await deleteMessageById(user.value, messageId);
+    socket.emit("send-message", messages.data);
+    isEditing.value = false;
+    content.value = "";
+  } catch (error) {
+    console.error("An error occured while deleting message:", error);
+  }
+};
+
+const editMessageContent = (message) => {
+  isEditing.value = true;
+  editMessageId.value = message.id;
+  content.value = message.content;
+  isDropdownVisible.value = false;
+};
+
+const updateMessage = async () => {
+  try {
+    const response = await editMessage(
+      user.value,
+      content.value,
+      editMessageId.value
+    );
+    socket.emit("send-message", response.data);
+    content.value = "";
+    isEditing.value = false;
+    editMessageId.value = null;
+  } catch (error) {
+    console.error("An error occured while updating message:", error);
   }
 };
 
@@ -284,8 +326,19 @@ const scrollToBottom = () => {
 };
 
 const scrollToEnd = () => {
-  const element = document.getElementById("chat-area")
+  const element = document.getElementById("chat-area");
   element.scrollTop = element.scrollHeight;
+};
+
+const toggleDropdown = (messageId) => {
+  messages.value = messages.value.map((message) => {
+    if (message.id === messageId) {
+      message.isDropdownVisible = !message.isDropdownVisible;
+    } else {
+      message.isDropdownVisible = false;
+    }
+    return message;
+  });
 };
 
 onMounted(() => {

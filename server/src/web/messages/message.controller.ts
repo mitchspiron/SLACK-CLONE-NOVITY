@@ -42,7 +42,7 @@ export class MessageController {
     return await this.messageService.editMessage(user, dto);
   }
 
-  @Delete()
+  @Post('delete')
   @HttpCode(HttpStatus.OK)
   async deleteMessageById(
     @User() user: UserEntity,
