@@ -1,7 +1,6 @@
 import {
   Body,
   Controller,
-  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -72,5 +71,14 @@ export class MessageController {
     @User() user: UserEntity,
   ): GlobalResponseType {
     return await this.messageService.getAllUsersNotChatedByUser(user);
+  }
+
+  @Post('to-seen/:id')
+  @HttpCode(HttpStatus.OK)
+  async updateAllMessageToSeenByChatId(
+    @User() user: UserEntity,
+    @Param('id') chat: string,
+  ): GlobalResponseType {
+    return await this.messageService.updateAllMessageToSeenByChatId(user, chat);
   }
 }

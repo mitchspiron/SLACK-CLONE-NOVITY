@@ -4,9 +4,12 @@
       class="flex flex-row items-center py-4 px-6 rounded-2xl shadow bg-gray-50 dark:bg-gray-700"
     >
       <div
-        class="flex items-center justify-center h-10 w-10 rounded-full bg-pink-500 text-pink-100"
+        class="flex items-center justify-center h-10 w-10 rounded-full bg-gray-100 text-pink-100"
       >
-        {{ chatWith.avatar }}
+        <minidenticon-svg
+          :username="chatWith.username"
+          class="h-10 w-10"
+        ></minidenticon-svg>
       </div>
       <div class="flex flex-col ml-3">
         <div class="font-semibold text-sm">
@@ -57,9 +60,12 @@
           >
             <div class="flex items-start gap-2.5">
               <div
-                class="flex items-center justify-center h-10 w-10 rounded-full bg-indigo-500 flex-shrink-0"
+                class="flex items-center justify-center h-10 w-10 rounded-full bg-gray-100 flex-shrink-0"
               >
-                {{ Array.from(message.sender.firstname)[0] }}
+                <minidenticon-svg
+                  :username="chatWith.username"
+                  class="h-10 w-10"
+                ></minidenticon-svg>
               </div>
               <div class="flex flex-col gap-1 w-full max-w-[320px]">
                 <div class="flex items-center space-x-2 rtl:space-x-reverse">
@@ -126,7 +132,7 @@
                       >Modifier</a
                     >
                   </li>
-                  <li>
+                  <li v-if="messages.length > 1">
                     <a
                       @click="removeMessage(message.id)"
                       class="cursor-pointer block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
@@ -152,8 +158,8 @@
                   </p>
                 </div>
                 <span
-                  class="text-sm font-normal text-gray-500 dark:text-gray-400"
-                  >{{ message.status == "SENT" ? "sent" : "seen" }}</span
+                  class="text-end text-sm font-normal text-gray-500 dark:text-gray-400"
+                  >{{ message.status == "SENT" ? "✓" : "✓✓" }}</span
                 >
               </div>
             </div>
@@ -199,11 +205,13 @@
 
 <script setup>
 import moment from "moment";
+import { minidenticon } from "minidenticons";
 import {
   getAllMessageByChatId,
   createMessage,
   deleteMessageById,
   editMessage,
+  updateAllMessageToSeenByChatId,
 } from "../../api/message.api";
 import { useUserStore } from "../../stores/user.ts";
 import { onMounted, ref, watch, nextTick, onUpdated } from "vue";
@@ -228,6 +236,7 @@ const scrollContent = ref(null);
 const fetchMessages = async () => {
   try {
     const response = await getAllMessageByChatId(user.value, chatId.value);
+
     messages.value = response.data.messages;
     const usersInChat = response.data.users_in_chat.map(
       (user) => user.users.id
@@ -245,11 +254,6 @@ const fetchMessages = async () => {
       id: otherUser.users.id,
       username: otherUser.users.firstname + " " + otherUser.users.lastname,
       status: otherUser.users.status,
-      avatar: (
-        otherUser.users.firstname +
-        " " +
-        otherUser.users.lastname
-      ).charAt(0),
     };
   } catch (error) {
     console.error("An error occured while fetching messages:", error);
@@ -277,13 +281,27 @@ const sendMessage = async () => {
         content.value,
         recipientId
       );
-      console.log("MESSAGE", response.data.message.chatId)
+      fetchMessages();
       socket.emit("send-message", response.data);
       content.value = "";
       return response;
     }
   } catch (error) {
     console.error("An error occured while sending message:", error);
+  }
+};
+
+const changeMessageStatus = async () => {
+  try {
+    const response = await updateAllMessageToSeenByChatId(
+      user.value,
+      chatId.value
+    );
+    socket.emit("send-message", response.data);
+    fetchMessages();
+    return response;
+  } catch (error) {
+    console.error("An error occured while changing message status:", error);
   }
 };
 
@@ -344,7 +362,7 @@ onMounted(() => {
   socket.on("arrival-message", () => {
     fetchMessages();
   });
-  scrollToEnd();
+  changeMessageStatus();
 });
 
 onUpdated(() => {

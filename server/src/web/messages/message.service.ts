@@ -15,6 +15,7 @@ import {
 } from './dto';
 import { GlobalResponseType, ResponseMap } from '../../utils/type';
 import { Messages, Users } from '@prisma/client';
+import { MESSAGE_STATUS } from 'src/utils/enum';
 
 @Injectable()
 export class MessageService {
@@ -277,7 +278,7 @@ export class MessageService {
           chatId: userChat.chatId,
         },
         orderBy: {
-          updatedAt: 'asc',
+          createdAt: 'asc',
         },
         select: {
           id: true,
@@ -410,6 +411,7 @@ export class MessageService {
           lastMessageContent: lastMessage?.content,
           lastMessageCreatedAt: lastMessage?.createdAt,
           lastMessageSenderId: lastMessage?.senderId,
+          lastMessageStatus: lastMessage?.status,
           otherUserFirstName: otherUser.firstname,
           otherUserLastName: otherUser.lastname,
           otherUserStatus: otherUser.status,
@@ -469,6 +471,49 @@ export class MessageService {
           chats: usersWithoutMyChats,
         },
         'Users Fetched Successfully',
+      );
+    } catch (err) {
+      throw new HttpException(
+        err,
+        err.status || HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async updateAllMessageToSeenByChatId(
+    user: Users,
+    chat: string,
+  ): GlobalResponseType {
+    try {
+      const userChat = await this.prisma.users_Chats.findFirst({
+        where: {
+          userId: user.id,
+          chatId: chat,
+        },
+      });
+
+      if (!userChat) {
+        throw new UnauthorizedException('User not allowed to access this chat');
+      }
+
+      const messages = await this.prisma.messages.updateMany({
+        data: {
+          status: MESSAGE_STATUS.SEEN,
+        },
+        where: {
+          chatId: chat,
+          senderId: {
+            not: user.id,
+          },
+          status: MESSAGE_STATUS.SENT,
+        },
+      });
+
+      return ResponseMap(
+        {
+          messages: messages,
+        },
+        'Message Updated Successfully',
       );
     } catch (err) {
       throw new HttpException(

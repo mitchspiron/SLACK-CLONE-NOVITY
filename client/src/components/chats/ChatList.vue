@@ -65,7 +65,7 @@
           class="relative flex flex-row items-center p-4 cursor-pointer"
           @click="goToChat(user.chatId)"
         >
-          <div class="absolute text-xs text-gray-500 right-0 mr-4">
+          <div class="absolute text-xs text-gray-400 right-0 mr-8 pb-4">
             {{ moment(user.lastMessageCreatedAt).startOf("hour").fromNow() }}
           </div>
           <div
@@ -76,11 +76,21 @@
               class="h-10 w-10"
             ></minidenticon-svg>
           </div>
-          <div class="flex flex-col flex-grow ml-3">
+          <div :class="{
+                  ' flex flex-col flex-grow m-1 rounded-xl px-3':
+                    me.id === user.lastMessageSenderId,
+                  'flex flex-col flex-grow bg-gray-600 m-1 rounded-xl px-2 py-1':
+                    me.id !== user.lastMessageSenderId &&
+                    user.lastMessageStatus === 'SENT',
+                  'flex flex-col flex-grow m-1 rounded-xl px-3':
+                    me.id !== user.lastMessageSenderId &&
+                    user.lastMessageStatus !== 'SENT',
+                }">
             <div class="flex items-center">
               <div class="text-sm font-medium">
                 {{ user.otherUserFirstName + " " + user.otherUserLastName }}
               </div>
+
               <div
                 v-if="user.otherUserStatus === 'ONLINE'"
                 class="h-2 w-2 rounded-full bg-green-500 ml-2"
@@ -243,14 +253,13 @@ const getAllUserChats = async (user) => {
   }
 };
 
-const goToChat = (link) => {
-  router.push(`/message/${link}`);
+const goToChat = async (chatId) => {
+  router.push(`/message/${chatId}`);
 };
 
 const sendMessage = async (userId) => {
   try {
     recipientId.value = userId;
-    console.log("🚀 ~ sendMessage ~ recipientId.value:", recipientId.value);
     const response = await createMessage(
       user.value,
       "Salut 👋",

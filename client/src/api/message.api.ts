@@ -41,6 +41,11 @@ export const getAllMessageByChatId = async (user: any, chatId: string) => {
   return response.data;
 };
 
+export const updateAllMessageToSeenByChatId = async (user: any, chatId: string) => {
+  const response = await api.post(`/message/to-seen/${chatId}`, { user });
+  return response.data;
+};
+
 export const getAllUserChatsByUserId = async (userId: any) => {
   const response = await api.get("/message/user-chat", userId);
   return response.data;
